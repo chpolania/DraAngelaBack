@@ -1,10 +1,12 @@
 import { google } from 'googleapis';
 
 import {
+    ICalendarBusyInterval,
+    ICalendarAvailabilityReader,
     ICalendarEvent,
-    ICalendarEventGateway,
+    ICalendarEventCreator,
     ICreatedCalendarEvent,
-} from '../../domain/interfaces/index.interface';
+} from '../../domain/interfaces/calendar-event.interface';
 import config from '../../config/config';
 
 const calendarScope = 'https://www.googleapis.com/auth/calendar.events';
@@ -31,29 +33,13 @@ function getUpstreamStatus(error: unknown): number | undefined {
     return typeof response.status === 'number' ? response.status : undefined;
 }
 
-export class GoogleCalendarGateway implements ICalendarEventGateway {
+export class GoogleCalendarGateway implements ICalendarEventCreator, ICalendarAvailabilityReader {
     public async createEvent(event: ICalendarEvent): Promise<ICreatedCalendarEvent> {
-        const { CALENDAR_ID, SERVICE_ACCOUNT_EMAIL, PRIVATE_KEY } = config.googleCalendarConfig;
-        if (!CALENDAR_ID || !SERVICE_ACCOUNT_EMAIL || !PRIVATE_KEY) {
-            const missingConfiguration: string[] = [];
-            if (!CALENDAR_ID) {
-                missingConfiguration.push('GOOGLE_CALENDAR_ID');
-            }
-            if (!SERVICE_ACCOUNT_EMAIL) {
-                missingConfiguration.push('GOOGLE_SERVICE_ACCOUNT_EMAIL');
-            }
-            if (!PRIVATE_KEY) {
-                missingConfiguration.push('GOOGLE_PRIVATE_KEY');
-            }
-            throw new Error(`Missing Google Calendar configuration: ${missingConfiguration.join(', ')}.`);
+        const { CALENDAR_ID } = config.googleCalendarConfig;
+        if (!CALENDAR_ID) {
+            throw new Error('Missing Google Calendar configuration: GOOGLE_CALENDAR_ID.');
         }
-
-        const auth = new google.auth.JWT({
-            email: SERVICE_ACCOUNT_EMAIL,
-            key: PRIVATE_KEY.replace(/\\n/g, '\n'),
-            scopes: [calendarScope],
-        });
-        const calendar = google.calendar({ version: 'v3', auth });
+        const calendar = google.calendar({ version: 'v3', auth: this.getAuth() });
         let response;
         try {
             response = await calendar.events.insert({
@@ -78,5 +64,70 @@ export class GoogleCalendarGateway implements ICalendarEventGateway {
             id: response.data.id,
             ...(response.data.htmlLink ? { htmlLink: response.data.htmlLink } : {}),
         };
+    }
+
+    public async getBusyIntervals(
+        timeMin: string,
+        timeMax: string,
+        timeZone: string,
+    ): Promise<ICalendarBusyInterval[]> {
+        const { CALENDAR_ID } = config.googleCalendarConfig;
+        if (!CALENDAR_ID) {
+            throw new Error('Missing Google Calendar configuration: GOOGLE_CALENDAR_ID.');
+        }
+
+        const calendar = google.calendar({ version: 'v3', auth: this.getAuth() });
+        const busyIntervals: ICalendarBusyInterval[] = [];
+        let pageToken: string | undefined;
+
+        do {
+            const response = await calendar.events.list({
+                calendarId: CALENDAR_ID,
+                timeMin,
+                timeMax,
+                timeZone,
+                singleEvents: true,
+                orderBy: 'startTime',
+                maxResults: 2500,
+                pageToken,
+                fields: 'nextPageToken,items(start(date,dateTime),end(date,dateTime),status,transparency)',
+            });
+
+            for (const event of response.data.items ?? []) {
+                if (event.status === 'cancelled' || event.transparency === 'transparent') {
+                    continue;
+                }
+
+                const start = event.start?.dateTime ?? event.start?.date;
+                const end = event.end?.dateTime ?? event.end?.date;
+                if (start && end) {
+                    busyIntervals.push({ start, end });
+                }
+            }
+
+            pageToken = response.data.nextPageToken ?? undefined;
+        } while (pageToken);
+
+        return busyIntervals;
+    }
+
+    private getAuth() {
+        const { SERVICE_ACCOUNT_EMAIL, PRIVATE_KEY } = config.googleCalendarConfig;
+        if (!SERVICE_ACCOUNT_EMAIL || !PRIVATE_KEY) {
+            const missingConfiguration: string[] = [];
+            if (!SERVICE_ACCOUNT_EMAIL) {
+                missingConfiguration.push('GOOGLE_SERVICE_ACCOUNT_EMAIL');
+            }
+            if (!PRIVATE_KEY) {
+                missingConfiguration.push('GOOGLE_PRIVATE_KEY');
+            }
+            throw new Error(`Missing Google Calendar configuration: ${missingConfiguration.join(', ')}.`);
+        }
+
+        return new google.auth.JWT({
+            email: SERVICE_ACCOUNT_EMAIL,
+            key: PRIVATE_KEY.replace(/\\n/g, '\n'),
+            scopes: [calendarScope],
+        });
     }
 }

@@ -53,6 +53,15 @@ curl --location 'http://localhost:9080/v1/product/tax' \
 
 The unauthenticated `POST /v1/product/calendar/events` endpoint creates an event with the Google Calendar API. Enable the Google Calendar API in the Google Cloud project, then share the target calendar with the service account and grant it permission to make changes to events.
 
+The unauthenticated `GET /v1/product/calendar/availability` endpoint takes a `date` query parameter in `dd/MM/yyyy` format and returns free one-hour slots between 08:00 and 18:00 in `America/Bogota`. Existing non-cancelled, non-transparent events are excluded, including recurring event instances. For example:
+
+```bash
+curl --get 'http://localhost:9080/v1/product/calendar/availability' \
+  --data-urlencode 'date=09/10/2026'
+```
+
+The response contains the requested date, time zone, and available slot labels such as `8am - 9am`. The service account needs access to read events in the target calendar.
+
 Configure these environment variables in the backend runtime:
 
 - `GOOGLE_CALENDAR_ID`: the target calendar ID, usually the calendar owner's email address for a calendar shared with the service account. Use `primary` only when the service account itself has a primary calendar.

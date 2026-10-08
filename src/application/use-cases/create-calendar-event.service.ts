@@ -1,4 +1,8 @@
-import { ICalendarEvent, ICalendarEventGateway, ICreatedCalendarEvent } from '../../domain/interfaces/index.interface';
+import {
+    ICalendarEvent,
+    ICalendarEventCreator,
+    ICreatedCalendarEvent,
+} from '../../domain/interfaces/calendar-event.interface';
 import { CustomError } from '../../utils/custom-error.utils';
 
 type UnknownRecord = Record<string, unknown>;
@@ -44,7 +48,7 @@ function optionalText(
 
 export class CreateCalendarEventService {
     constructor(
-        private readonly calendarEventGateway: ICalendarEventGateway,
+        private readonly calendarEventGateway: ICalendarEventCreator,
     ) {}
 
     public async execute(
