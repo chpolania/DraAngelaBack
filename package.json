@@ -1,0 +1,60 @@
+{
+  "name": "mati-arqsw-nodejs-api-mngr",
+  "version": "1.0.0",
+  "description": "nodejs api that handles availability tactics for ASR on the 2nd challenge",
+  "keywords": [
+    "nodejs",
+    "availability",
+    "security",
+    "template",
+    "ASR tactics",
+    "backend"
+  ],
+  "author": "@AndresFWilT",
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "tsc",
+    "build:dev": "tsc",
+    "build:lab": "tsc",
+    "build:prod": "tsc",
+    "start": "node ./build/src/bin/www.js",
+    "start:dev": "npm run build && export DEBUG=mati-arqsw:* && npm start",
+    "dev": "nodemon --watch src -e ts,js --exec npm run start:dev",
+    "test:file": "export $(cat test/.env-test | xargs) && mocha --timeout 10000 --require ts-node/register",
+    "test:only": "npm run test:file -- 'test/*/.spec.ts'",
+    "test": "npm run lint && npm run test:only",
+    "coverage": "export $(cat test/.env-test | xargs) && nyc _mocha --timeout 10000 --require ts-node/register 'test/*/.spec.ts'",
+    "coverage:report": "nyc report --reporter=lcov --reporter=text",
+    "coverage:web": "npm run coverage && serve coverage/",
+    "lint": "tslint -c tslint.json -p tsconfig.json",
+    "lint:fix": "npm run lint -- --fix",
+    "debug": "DEBUG=* node ./build/src/bin/www.js",
+    "clean": "rm -rf .nyc_output coverage build .scannerwork performance/.clinic-doctor",
+    "seed": "ts-node ./src/domain/entities/seed.ts"
+  },
+  "dependencies": {
+    "@types/cookie-parser": "^1.4.7",
+    "@types/debug": "^4.1.12",
+    "@types/express": "^4.17.21",
+    "@types/express-actuator": "^1.8.3",
+    "@types/morgan": "^1.9.9",
+    "axios": "^1.6.7",
+    "body-parser": "^1.20.2",
+    "cookie-parser": "^1.4.6",
+    "debug": "^4.3.4",
+    "dotenv": "^18.0.6",
+    "express": "^4.18.3",
+    "express-actuator": "^1.8.4",
+    "express-openapi-validator": "^5.1.6",
+    "express-validator": "^7.0.1",
+    "googleapis": "144.0.0",
+    "morgan": "^1.10.0",
+    "nodemon": "^1.14.10",
+    "typescript": "^5.3.3",
+    "uuid": "9.0.1",
+    "uuidv4": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/uuid": "^9.0.8"
+  }
+}
