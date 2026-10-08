@@ -17,7 +17,7 @@
     "build:dev": "tsc",
     "build:lab": "tsc",
     "build:prod": "tsc",
-    "start": "node ./build/src/bin/www.js",
+    "start": "node ./server.js",
     "start:dev": "npm run build && export DEBUG=mati-arqsw:* && npm start",
     "dev": "nodemon --watch src -e ts,js --exec npm run start:dev",
     "test:file": "export $(cat test/.env-test | xargs) && mocha --timeout 10000 --require ts-node/register",
@@ -28,7 +28,7 @@
     "coverage:web": "npm run coverage && serve coverage/",
     "lint": "tslint -c tslint.json -p tsconfig.json",
     "lint:fix": "npm run lint -- --fix",
-    "debug": "DEBUG=* node ./build/src/bin/www.js",
+    "debug": "DEBUG=* node ./server.js",
     "clean": "rm -rf .nyc_output coverage build .scannerwork performance/.clinic-doctor",
     "seed": "ts-node ./src/domain/entities/seed.ts"
   },
