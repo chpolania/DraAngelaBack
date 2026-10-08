@@ -20,20 +20,29 @@ export class ServerConfiguration {
 
     private configure(): void {
         this._app.use(logger('dev', { skip: (req, res) => req.path === '/management/health' }));
+        this._app.use((request, response, next) => {
+            response.header('Access-Control-Allow-Origin', '*');
+            response.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+
+            const requestedHeaders = request.header('Access-Control-Request-Headers');
+            if (requestedHeaders) {
+                response.header('Access-Control-Allow-Headers', requestedHeaders);
+                response.vary('Access-Control-Request-Headers');
+            } else {
+                response.header('Access-Control-Allow-Headers', 'Content-Type, X-RqUID, X-Name');
+            }
+
+            if (request.method === 'OPTIONS') {
+                response.sendStatus(204);
+                return;
+            }
+
+            next();
+        });
         this._app.use(express.json());
         this._app.use(express.urlencoded({ extended: false }));
         this._app.use(cookieParser());
         this._app.use(express.static(path.join(__dirname, '../static')));
-        this._app.use((_, res, next) => {
-            res.header('Access-Control-Allow-Origin', '*');
-            res.header('Access-Control-Allow-Headers', '*');
-            res.header(
-                'Access-Control-Allow-Methods',
-                'GET, POST, OPTIONS, PUT, DELETE',
-            );
-            res.header('Allow', 'GET, POST, OPTIONS, PUT, DELETE');
-            next();
-        });
 
         this._app.use(
             actuator({

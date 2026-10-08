@@ -60,6 +60,8 @@ curl --get 'http://localhost:9080/v1/product/calendar/availability' \
   --data-urlencode 'date=09/10/2026'
 ```
 
+The API allows public cross-origin requests and answers browser `OPTIONS` preflight requests. It does not allow credentialed browser requests; do not set `credentials: 'include'` or `withCredentials: true`.
+
 The response contains the requested date, time zone, and available slot labels such as `8am - 9am`. The service account needs access to read events in the target calendar.
 
 Configure these environment variables in the backend runtime:
