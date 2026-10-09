@@ -8,6 +8,7 @@ import { GetLandingPageDataService } from '../../application/use-cases/get-landi
 import { GetLandingPageParametersService } from '../../application/use-cases/get-landing-page-parameters.service';
 import { GetLandingPageServicesService } from '../../application/use-cases/get-landing-page-services.service';
 import { GetLandingPageTestimonialsService } from '../../application/use-cases/get-landing-page-testimonials.service';
+import { CreatePublicLandingPageTestimonialService } from '../../application/use-cases/create-public-landing-page-testimonial.service';
 
 export class LandingPageController {
     private readonly router = Router();
@@ -17,6 +18,7 @@ export class LandingPageController {
         private readonly getLandingPageParameters: GetLandingPageParametersService,
         private readonly getLandingPageServices: GetLandingPageServicesService,
         private readonly getLandingPageTestimonials: GetLandingPageTestimonialsService,
+        private readonly createPublicTestimonial: CreatePublicLandingPageTestimonialService,
         private readonly updateParameter: UpdateLandingPageParameterService,
         private readonly updateService: UpdateLandingPageService,
         private readonly updateTestimonial: UpdateLandingPageTestimonialService,
@@ -43,6 +45,20 @@ export class LandingPageController {
 
     public getRouter(): Router {
         return this.router;
+    }
+
+    public async createPublicReview(
+        request: Request,
+        response: Response,
+        next: NextFunction,
+    ): Promise<void> {
+        const requestId = request.header('X-RqUID') || uuid();
+        try {
+            const result = await this.createPublicTestimonial.execute(requestId, request.body);
+            response.status(201).json(result);
+        } catch (error) {
+            next(error);
+        }
     }
 
     public async getData(

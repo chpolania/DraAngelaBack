@@ -10,6 +10,7 @@ import { GetLandingPageDataService } from '../../application/use-cases/get-landi
 import { GetLandingPageParametersService } from '../../application/use-cases/get-landing-page-parameters.service';
 import { GetLandingPageServicesService } from '../../application/use-cases/get-landing-page-services.service';
 import { GetLandingPageTestimonialsService } from '../../application/use-cases/get-landing-page-testimonials.service';
+import { CreatePublicLandingPageTestimonialService } from '../../application/use-cases/create-public-landing-page-testimonial.service';
 
 const landingPageRouter = Router();
 const gateway = new LandingPageMysqlGateway();
@@ -18,6 +19,7 @@ const controller = new LandingPageController(
     new GetLandingPageParametersService(gateway),
     new GetLandingPageServicesService(gateway),
     new GetLandingPageTestimonialsService(gateway),
+    new CreatePublicLandingPageTestimonialService(gateway),
     new UpdateLandingPageParameterService(gateway),
     new UpdateLandingPageService(gateway),
     new UpdateLandingPageTestimonialService(gateway),
@@ -25,6 +27,9 @@ const controller = new LandingPageController(
 
 landingPageRouter.get('/', (request, response, next) => {
     controller.getData(request, response, next).catch(next);
+});
+landingPageRouter.post('/testimonials', (request, response, next) => {
+    controller.createPublicReview(request, response, next).catch(next);
 });
 landingPageRouter.use(requireLandingPageAdmin);
 landingPageRouter.use(controller.getRouter());

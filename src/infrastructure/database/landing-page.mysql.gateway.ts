@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import { RowDataPacket } from 'mysql2';
 
 import { getMysqlPool } from './mysql-connection';
@@ -49,6 +50,14 @@ export interface LandingPageTestimonialRow extends RowDataPacket {
 export interface LandingPageAdminTestimonialRow extends LandingPageTestimonialRow {
     active: boolean | number;
     display_order: number;
+}
+
+export interface NewLandingPageTestimonial {
+    name: string;
+    rating: number;
+    comment: string;
+    service: string | null;
+    language: string;
 }
 
 export interface LandingPageData {
@@ -106,6 +115,24 @@ export class LandingPageMysqlGateway {
              ORDER BY display_order, id`,
         );
         return testimonials;
+    }
+
+    public async createPublicTestimonial(testimonial: NewLandingPageTestimonial): Promise<string> {
+        const id = randomBytes(8).readBigUInt64BE() & 9223372036854775807n;
+        await getMysqlPool().execute(
+            `INSERT INTO \`${tableNames.testimonial}\`
+                (id, name, rating, comment, testimonial_date, service, verified, language, active, display_order)
+             VALUES (?, ?, ?, ?, CURRENT_DATE, ?, 0, ?, 0, 0)`,
+            [
+                id.toString(),
+                testimonial.name,
+                testimonial.rating,
+                testimonial.comment,
+                testimonial.service,
+                testimonial.language,
+            ],
+        );
+        return id.toString();
     }
 
     public async getActiveData(language: string): Promise<LandingPageData> {

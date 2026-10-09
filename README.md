@@ -115,6 +115,16 @@ The API also exposes a protected `GET` endpoint to retrieve all records from `la
 
 These endpoints require the access token returned by login using the Bearer authorization scheme. The parameters response is an array of records containing `id`, `section`, `parameter_key`, `parameter_value`, `value_type`, `language`, and `active`. The services response includes `id`, `title`, `badge`, `short_description`, `full_description`, `duration`, `price`, `icon`, `benefits`, `language`, `active`, and `display_order`. Testimonials include `id`, `name`, `rating`, `comment`, `testimonial_date`, `service`, `verified`, `language`, `active`, and `display_order`.
 
+Visitors can submit a review without authentication using `POST /v1/product/landing-page/testimonials`. Send `name`, `rating` (integer from 1 to 5), and `comment`; `service` and `language` are optional (`es-CO` by default). New submissions are stored inactive and unverified for moderation, with the submission date set by the API:
+
+```bash
+curl --request POST 'http://localhost:9080/v1/product/landing-page/testimonials' \
+  --header 'Content-Type: application/json' \
+  --data '{"name":"Ana","rating":5,"comment":"Excelente atención","service":"Consulta","language":"es-CO"}'
+```
+
+The API responds with `201` and the new record ID. An administrator must activate and verify the review before it appears publicly.
+
 Three protected `PATCH` endpoints update existing records only:
 
 - `/v1/product/landing-page/parameters/:id`
