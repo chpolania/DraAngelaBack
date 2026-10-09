@@ -103,6 +103,52 @@ This endpoint intentionally has no caller authentication. Restrict network acces
 
 If Google responds that the calendar was not found or accessible, verify that `GOOGLE_CALENDAR_ID` is the target calendar's actual ID and that the calendar is shared with `GOOGLE_SERVICE_ACCOUNT_EMAIL` with permission to make changes to events. Enable the Google Calendar API for the service account's Google Cloud project, then restart the API after changing `.env`.
 
+## Updating landing-page content
+
+The API exposes a public, read-only `GET /v1/product/landing-page` endpoint for the landing-page content. It returns records with `active = 1` for `es-CO`; select another language with `?language=en-US`. The response contains only sections and lists that have matching rows in MySQL; it does not fill missing content with defaults. Parameter values are grouped under `parameters` by `section` and `parameter_key`; `json`, `number`, and `boolean` value types are parsed into JSON values. Services and testimonials are ordered by `display_order`.
+
+The API also exposes three `PATCH` endpoints for updating existing records only:
+
+- `/v1/product/landing-page/parameters/:id`
+- `/v1/product/landing-page/services/:id`
+- `/v1/product/landing-page/testimonials/:id`
+
+All three require an access token in the `Authorization: Bearer <token>` header. Obtain the token through `POST /v1/product/auth/login` using an active `app_user` username and password. The access token is signed using `JWT_SECRET` and expires after one hour. Set `JWT_SECRET` to a random secret of at least 32 bytes and configure `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` for MySQL. For Hostinger, use the database host and credentials shown in its control panel; do not assume the host is `localhost` if the database is hosted remotely. Keep these values in the hosting provider's environment configuration and never commit them.
+
+Login example:
+
+```bash
+curl --request POST 'http://localhost:9080/v1/product/auth/login' \
+  --header 'Content-Type: application/json' \
+  --data '{"username":"your-username","password":"your-password"}'
+```
+
+The response includes `access_token`, `token_type` (`Bearer`), and `expires_in` (`3600` seconds). Use the returned access token on the landing-page update endpoints.
+
+For accounts using this login implementation, store `password_salt` as Base64 for at least 16 cryptographically random bytes, and `password_hash` as the 64-character hexadecimal Argon2id raw digest. The Argon2id parameters are 64 MiB memory, 3 iterations, 1 lane, and a 32-byte digest. Passwords are verified against these separate values; they are never decrypted.
+
+Users can be provisioned through the protected `POST /v1/product/auth/users` endpoint. Set `USER_PROVISIONING_TOKEN` to a separate random secret of at least 32 bytes in the backend environment. Supply it in the `X-User-Provisioning-Token` header; this secret is distinct from `JWT_SECRET` and user access tokens.
+
+```bash
+curl --request POST 'http://localhost:9080/v1/product/auth/users' \
+  --header "X-User-Provisioning-Token: ${USER_PROVISIONING_TOKEN}" \
+  --header 'Content-Type: application/json' \
+  --data '{"username":"new-user","password":"use-a-strong-password"}'
+```
+
+The service creates a unique salt and Argon2id hash using the same parameters as login, then inserts the record into `app_user`. `active` defaults to `true` and can be set to `false` to provision a disabled user. Successful creation returns `201`; duplicate usernames return `409`. Requests are rejected if the provisioning secret is missing or incorrect.
+
+The updateable fields are `section`, `parameter_key`, `parameter_value`, `value_type`, `language`, and `active` for parameters; `title`, `badge`, `short_description`, `full_description`, `duration`, `price`, `icon`, `benefits`, `active`, `display_order`, and `language` for services; and `name`, `rating`, `comment`, `testimonial_date`, `service`, `verified`, `active`, `display_order`, and `language` for testimonials. Each request body must include at least one of that table's fields, for example:
+
+```bash
+curl --request PATCH 'http://localhost:9080/v1/product/landing-page/services/1' \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+  --header 'Content-Type: application/json' \
+  --data '{"title":"Consulta especializada","price":"150000","active":true}'
+```
+
+`id`, `created_at`, and `updated_at` cannot be supplied; `updated_at` is maintained by the API. The endpoint returns `404` if the ID does not exist, and rejects unknown or invalid fields. These routes do not create or delete records and do not run schema changes; add the records and tables separately before using them.
+
 ## Members
 
 - Andrés Felipe Wilches Torres
