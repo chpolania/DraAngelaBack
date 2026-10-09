@@ -7,11 +7,17 @@ import { LandingPageController } from '../controllers/landing-page.controller';
 import { requireLandingPageAdmin } from '../middlewares/landing-page-admin-auth.middleware';
 import { LandingPageMysqlGateway } from '../../infrastructure/database/landing-page.mysql.gateway';
 import { GetLandingPageDataService } from '../../application/use-cases/get-landing-page-data.service';
+import { GetLandingPageParametersService } from '../../application/use-cases/get-landing-page-parameters.service';
+import { GetLandingPageServicesService } from '../../application/use-cases/get-landing-page-services.service';
+import { GetLandingPageTestimonialsService } from '../../application/use-cases/get-landing-page-testimonials.service';
 
 const landingPageRouter = Router();
 const gateway = new LandingPageMysqlGateway();
 const controller = new LandingPageController(
     new GetLandingPageDataService(gateway),
+    new GetLandingPageParametersService(gateway),
+    new GetLandingPageServicesService(gateway),
+    new GetLandingPageTestimonialsService(gateway),
     new UpdateLandingPageParameterService(gateway),
     new UpdateLandingPageService(gateway),
     new UpdateLandingPageTestimonialService(gateway),

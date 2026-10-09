@@ -13,6 +13,10 @@ export interface LandingPageParameterRow extends RowDataPacket {
     language: string;
 }
 
+export interface LandingPageAdminParameterRow extends LandingPageParameterRow {
+    active: boolean | number;
+}
+
 export interface LandingPageServiceRow extends RowDataPacket {
     id: string;
     title: string;
@@ -26,6 +30,11 @@ export interface LandingPageServiceRow extends RowDataPacket {
     language: string;
 }
 
+export interface LandingPageAdminServiceRow extends LandingPageServiceRow {
+    active: boolean | number;
+    display_order: number;
+}
+
 export interface LandingPageTestimonialRow extends RowDataPacket {
     id: string;
     name: string;
@@ -35,6 +44,11 @@ export interface LandingPageTestimonialRow extends RowDataPacket {
     service: string | null;
     verified: boolean | number;
     language: string;
+}
+
+export interface LandingPageAdminTestimonialRow extends LandingPageTestimonialRow {
+    active: boolean | number;
+    display_order: number;
 }
 
 export interface LandingPageData {
@@ -62,6 +76,38 @@ const editableColumns: Record<LandingPageTable, readonly string[]> = {
 };
 
 export class LandingPageMysqlGateway {
+    public async getAllParameters(): Promise<LandingPageAdminParameterRow[]> {
+        const pool = getMysqlPool();
+        const [parameters] = await pool.execute<LandingPageAdminParameterRow[]>(
+            `SELECT id, section, parameter_key, parameter_value, value_type, language, active
+             FROM \`${tableNames.parameter}\`
+             ORDER BY section, id`,
+        );
+        return parameters;
+    }
+
+    public async getAllServices(): Promise<LandingPageAdminServiceRow[]> {
+        const pool = getMysqlPool();
+        const [services] = await pool.execute<LandingPageAdminServiceRow[]>(
+            `SELECT id, title, badge, short_description, full_description, duration, price,
+                    icon, benefits, language, active, display_order
+             FROM \`${tableNames.service}\`
+             ORDER BY display_order, id`,
+        );
+        return services;
+    }
+
+    public async getAllTestimonials(): Promise<LandingPageAdminTestimonialRow[]> {
+        const pool = getMysqlPool();
+        const [testimonials] = await pool.execute<LandingPageAdminTestimonialRow[]>(
+            `SELECT id, name, rating, comment, testimonial_date, service, verified, language,
+                    active, display_order
+             FROM \`${tableNames.testimonial}\`
+             ORDER BY display_order, id`,
+        );
+        return testimonials;
+    }
+
     public async getActiveData(language: string): Promise<LandingPageData> {
         const pool = getMysqlPool();
         const [parameters, services, testimonials] = await Promise.all([
