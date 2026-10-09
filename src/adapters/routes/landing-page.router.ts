@@ -1,0 +1,26 @@
+import { Router } from 'express';
+
+import { UpdateLandingPageParameterService } from '../../application/use-cases/update-landing-page-parameter.service';
+import { UpdateLandingPageService } from '../../application/use-cases/update-landing-page-service.service';
+import { UpdateLandingPageTestimonialService } from '../../application/use-cases/update-landing-page-testimonial.service';
+import { LandingPageController } from '../controllers/landing-page.controller';
+import { requireLandingPageAdmin } from '../middlewares/landing-page-admin-auth.middleware';
+import { LandingPageMysqlGateway } from '../../infrastructure/database/landing-page.mysql.gateway';
+import { GetLandingPageDataService } from '../../application/use-cases/get-landing-page-data.service';
+
+const landingPageRouter = Router();
+const gateway = new LandingPageMysqlGateway();
+const controller = new LandingPageController(
+    new GetLandingPageDataService(gateway),
+    new UpdateLandingPageParameterService(gateway),
+    new UpdateLandingPageService(gateway),
+    new UpdateLandingPageTestimonialService(gateway),
+);
+
+landingPageRouter.get('/', (request, response, next) => {
+    controller.getData(request, response, next).catch(next);
+});
+landingPageRouter.use(requireLandingPageAdmin);
+landingPageRouter.use(controller.getRouter());
+
+export default landingPageRouter;
