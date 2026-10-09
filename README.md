@@ -107,7 +107,15 @@ If Google responds that the calendar was not found or accessible, verify that `G
 
 The API exposes a public, read-only `GET /v1/product/landing-page` endpoint for the landing-page content. It returns records with `active = 1` for `es-CO`; select another language with `?language=en-US`. The response contains only sections and lists that have matching rows in MySQL; it does not fill missing content with defaults. Parameter values are grouped under `parameters` by `section` and `parameter_key`; `json`, `number`, and `boolean` value types are parsed into JSON values. Services and testimonials are ordered by `display_order`.
 
-The API also exposes three `PATCH` endpoints for updating existing records only:
+The API also exposes a protected `GET` endpoint to retrieve all records from `landing_page_parameter`, including inactive rows:
+
+- `/v1/product/landing-page/parameters`
+- `/v1/product/landing-page/services` retrieves all `landing_page_service` records, including inactive rows.
+- `/v1/product/landing-page/testimonials` retrieves all `landing_page_testimonial` records, including inactive rows.
+
+These endpoints require the access token returned by login using the Bearer authorization scheme. The parameters response is an array of records containing `id`, `section`, `parameter_key`, `parameter_value`, `value_type`, `language`, and `active`. The services response includes `id`, `title`, `badge`, `short_description`, `full_description`, `duration`, `price`, `icon`, `benefits`, `language`, `active`, and `display_order`. Testimonials include `id`, `name`, `rating`, `comment`, `testimonial_date`, `service`, `verified`, `language`, `active`, and `display_order`.
+
+Three protected `PATCH` endpoints update existing records only:
 
 - `/v1/product/landing-page/parameters/:id`
 - `/v1/product/landing-page/services/:id`

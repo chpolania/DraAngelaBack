@@ -5,16 +5,31 @@ import { UpdateLandingPageParameterService } from '../../application/use-cases/u
 import { UpdateLandingPageService } from '../../application/use-cases/update-landing-page-service.service';
 import { UpdateLandingPageTestimonialService } from '../../application/use-cases/update-landing-page-testimonial.service';
 import { GetLandingPageDataService } from '../../application/use-cases/get-landing-page-data.service';
+import { GetLandingPageParametersService } from '../../application/use-cases/get-landing-page-parameters.service';
+import { GetLandingPageServicesService } from '../../application/use-cases/get-landing-page-services.service';
+import { GetLandingPageTestimonialsService } from '../../application/use-cases/get-landing-page-testimonials.service';
 
 export class LandingPageController {
     private readonly router = Router();
 
     constructor(
         private readonly getLandingPageData: GetLandingPageDataService,
+        private readonly getLandingPageParameters: GetLandingPageParametersService,
+        private readonly getLandingPageServices: GetLandingPageServicesService,
+        private readonly getLandingPageTestimonials: GetLandingPageTestimonialsService,
         private readonly updateParameter: UpdateLandingPageParameterService,
         private readonly updateService: UpdateLandingPageService,
         private readonly updateTestimonial: UpdateLandingPageTestimonialService,
     ) {
+        this.router.get('/parameters', (req, res, next) => {
+            this.getParameters(req, res, next).catch(next);
+        });
+        this.router.get('/services', (req, res, next) => {
+            this.getServices(req, res, next).catch(next);
+        });
+        this.router.get('/testimonials', (req, res, next) => {
+            this.getTestimonials(req, res, next).catch(next);
+        });
         this.router.patch('/parameters/:id', (req, res, next) => {
             this.handleUpdate(req, res, next, this.updateParameter);
         });
@@ -40,6 +55,45 @@ export class LandingPageController {
                 request.header('X-RqUID') || uuid(),
                 request.query.language,
             );
+            response.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    private async getParameters(
+        _request: Request,
+        response: Response,
+        next: NextFunction,
+    ): Promise<void> {
+        try {
+            const result = await this.getLandingPageParameters.execute();
+            response.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    private async getServices(
+        _request: Request,
+        response: Response,
+        next: NextFunction,
+    ): Promise<void> {
+        try {
+            const result = await this.getLandingPageServices.execute();
+            response.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    private async getTestimonials(
+        _request: Request,
+        response: Response,
+        next: NextFunction,
+    ): Promise<void> {
+        try {
+            const result = await this.getLandingPageTestimonials.execute();
             response.status(200).json(result);
         } catch (error) {
             next(error);
