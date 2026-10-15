@@ -4,6 +4,7 @@ import taxRouter from './adapters/routes/tax.router';
 import calendarRouter from './adapters/routes/calendar.router';
 import landingPageRouter from './adapters/routes/landing-page.router';
 import authRouter from './adapters/routes/auth.router';
+import hairAnalysisRouter from './adapters/routes/hair-analysis.router';
 
 const server = new ServerConfiguration();
 const app = server.app;
@@ -13,6 +14,7 @@ app.use(fullApiPath, taxRouter);
 app.use(`${fullApiPath}/calendar`, calendarRouter);
 app.use(`${fullApiPath}/auth`, authRouter);
 app.use(`${fullApiPath}/landing-page`, landingPageRouter);
+app.use(`${fullApiPath}/hair-analysis`, hairAnalysisRouter);
 app.use(sendErrorResponse);
 
 export default app;
