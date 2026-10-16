@@ -10,7 +10,8 @@
         "experimentalDecorators": true,
         "sourceMap": true,
         "resolveJsonModule": true,
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
+        "skipLibCheck": true
     },
     "include": [
         "./src",
